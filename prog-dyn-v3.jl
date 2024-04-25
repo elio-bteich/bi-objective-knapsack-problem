@@ -1,5 +1,5 @@
 # Author: Elio Bteich
-# Date: 17 April 2024
+# Date: 23 April 2024
 
 include("./util.jl")
 include("./struct_parse.jl")
@@ -11,7 +11,7 @@ function is_dominant(v1::CriterionVector2KP, v2::CriterionVector2KP)
 
 end
 
-# Find the non-dominated criterion vectors between 2 states of non-dominated vectors
+# Find the non-dominated criterion vectors between state S1 and state S2, after adding the actual element to the state S2
 function non_dominated_vectors(S1::State2KP, S2::State2KP, elemIndex::Int64, d::data2KP)
 
     nd::State2KP = []
