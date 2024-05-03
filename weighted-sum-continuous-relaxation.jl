@@ -59,8 +59,8 @@ end
 # Caclulate the continuous relaxation bound of a bi-objective problem with the weighted sum method
 function calculate_bound(data::data2KP)
 
-    y1 = continuous_relaxation(0.0, 1.0, data)
-    y2 = continuous_relaxation(1.0, 0.0, data)
+    y1 = continuous_relaxation(Float64(0.0), Float64(1.0), data)
+    y2 = continuous_relaxation(Float64(1.0), Float64(0.0), data)
 
     bound::Vector{Tuple{Float64, Float64}} = [y1, y2]
 
@@ -79,8 +79,7 @@ function calculate_bound_rec(y1::Tuple{Float64, Float64}, y2::Tuple{Float64, Flo
 
     push!(bound, y)
 
-    
-    if lambda1*y[1] + lambda2*y[2] > max(lambda1*y1[1] + lambda2*y1[2], lambda1*y2[1] + lambda2*y2[2])
+    if lambda1*(y[1] - y1[1]) > lambda2*(y1[2] - y[2])
 
         calculate_bound_rec(y1, y, bound, data)
         calculate_bound_rec(y, y2, bound, data)
