@@ -3,6 +3,7 @@
 
 include("./util.jl")
 include("./struct_parse.jl")
+include("./weighted-sum-continuous-relaxation.jl")
 
 # Return true if v1 dominates v2, false otherwise
 function is_dominant(v1::CriterionVector2KP, v2::CriterionVector2KP)
@@ -10,6 +11,8 @@ function is_dominant(v1::CriterionVector2KP, v2::CriterionVector2KP)
     return v1.z1 >= v2.z1 && v1.z2 >= v2.z2 
 
 end
+
+
 
 # Find the non-dominated criterion vectors between state S1 and state S2, after adding the actual element to the state S2
 function non_dominated_vectors(S1::State2KP, S2::State2KP, elemIndex::Int64, d::data2KP)
@@ -23,7 +26,7 @@ function non_dominated_vectors(S1::State2KP, S2::State2KP, elemIndex::Int64, d::
     # Since the nd vector is empty, we have treated the first iteration apart from the others to prevent checking if the nd vector is empty everytime we want to insert a new non-dominant vector in it
     if S1[p_s1].z1 > S2[p_s2].z1 + d.p1[elemIndex]    
 
-        push!(nd, S1[p_s1])
+        push!(nd, CriterionVector2KP(S1[p_s1].z1, S1[p_s1].z2, S1[p_s1]))
         p_s1 += 1
         
     elseif S1[p_s1].z1 < S2[p_s2].z1 + d.p1[elemIndex]
@@ -192,19 +195,77 @@ function find_nd_criterion_vectors(R::Matrix{State2KP})
 
 end
 
+function are_criterion_vectors_equal(cv1::Union{CriterionVector2KP, Nothing}, cv2::Union{CriterionVector2KP, Nothing})
+
+    return cv1.z1 == cv2.z1 && cv1.z2 == cv2.z2
+
+end
+
+# Construct the solutions associated with the non-dominant criterion vectors
+function construct_solutions(nd::State2KP, d::data2KP)
+
+    solutions::Vector{solutionKP} = [solutionKP(Vector{Int8}(undef, d.nbItems), 0, 0) for _ in 1:length(nd)]
+
+    for i in eachindex(nd)
+
+        solutions[i].z1 = nd[i].z1
+        solutions[i].z2 = nd[i].z2
+
+        cv::CriterionVector2KP = nd[i]
+
+        # stops before arriving to the first column because it doesn't have a pred
+        for j in d.nbItems:-1:2
+
+            if are_criterion_vectors_equal(cv, cv.pred)
+
+                solutions[i].x[j] = 0
+
+            else
+
+                solutions[i].x[j] = 1
+
+            end
+
+            cv = cv.pred
+
+        end
+
+        # first column
+        if cv.z1 == 0 && cv.z2 == 0
+
+            solutions[i].x[1] = 0
+
+        else
+
+            solutions[i].x[1] = 1
+
+        end
+
+    end
+
+    return solutions
+
+end
+
 function solve_prog_dyn(d::data2KP)
 
-    R = calculate_matrix(d)
-    return find_nd_criterion_vectors(R)
-
+    @time R::Matrix{State2KP} = calculate_matrix(d)
+    return @time nd::State2KP = find_nd_criterion_vectors(R)
+    #return @time construct_solutions(nd, d)
 end
 
 function solve_v3()
 
-    d = parseKP("Instances KP/2KP100-10.dat")
-    @time nd::State2KP = solve_prog_dyn(d)
-    println(length(nd))
-    plot_vectors(nd)
+    d = parseKP("Instances KP/2KP50-1.dat")
+    #@time solutions::Vector{solutionKP} = solve_prog_dyn(d)
+    
+    nd::State2KP = solve_prog_dyn(d)
+
+    @time bound::Vector{Tuple{Float64, Float64}} = calculate_bound(d)
+    #println(bound)
+    #println(solutions)
+    plot_vectors(nd, bound)
+    
 
 end
 
