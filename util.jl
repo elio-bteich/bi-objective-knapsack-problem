@@ -2,7 +2,7 @@ using Plots
 include("./struct_parse.jl")
 
 # Plot a state (criterion vectors) on a plane. (Only compatible with new version of prog-dyn)
-function plot_vectors(vectors::State2KP, bound_points::Vector{Tuple{Float64, Float64}})
+function plot_vectors(vectors::State2KP, bound_points::Vector{Tuple{Float64, Float64}}, vectors_desc::String, bound_desc::String)
     x::Vector{Int64} = []
     y::Vector{Int64} = []
 
@@ -13,22 +13,27 @@ function plot_vectors(vectors::State2KP, bound_points::Vector{Tuple{Float64, Flo
     end
 
     # Create the initial scatter plot
-    p = scatter(x, y, label="Original Points", color=:blue)
+    p = scatter(x, y, label=vectors_desc, color=:blue, markersize=4)
 
     # Extract x and y coordinates for bound_points
+    # Sort the bound_points by the first coordinate of each tuple
+    sorted_bound_points = sort(bound_points, by=first)
+
     bx::Vector{Float64} = Float64[]
     by::Vector{Float64} = Float64[]
     
-    for point in bound_points
+    for point in sorted_bound_points
         push!(bx, point[1])
         push!(by, point[2])
     end
 
-    # Add bound_points to the scatter plot
-    scatter!(bx, by, color=:red, label="Bound Points")
+    plot!(bx, by, color=:red, label=bound_desc, lw=4)
+
 
     return p
 end
+
+
 
 # Plot a state (criterion vectors) on a plane. (Only compatible with old version of prog-dyn)
 function plot_vectors(vectors::Vector{Tuple{Int64, Int64}})
