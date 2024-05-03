@@ -1,3 +1,9 @@
+struct dataKP
+    p::Vector{Float64} # profits objectif
+    w::Vector{Float64} # poids
+    Omega::Int64 # capacité
+    nbItems::Int64 # nombre d'objets
+end
 
 struct data2KP
     p1::Vector{Int64} # profits objectif 1
@@ -15,7 +21,7 @@ end
 
 const State2KP = Vector{CriterionVector2KP}
 
-struct solutionKP
+mutable struct solutionKP
     x::Vector{Int8}
     z1::Int64
     z2::Int64
